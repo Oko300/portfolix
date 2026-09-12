@@ -13,13 +13,13 @@ const Login = () => {
   const navigate = useNavigate();
 
   const onSubmit = async (data) => {
-    const success = await login(data.email, data.password);
-    if (success) {
-      if (user?.role === 'student') {
+    const response = await login(data.email, data.password);
+    if (response.success) {
+      if (response.user?.role === 'student') {
         navigate('/dashboard');
-      } else if (user?.role === 'teacher') {
+      } else if (response.user?.role === 'teacher') {
         navigate('/teacher');
-      } else if (user?.role === 'admin') {
+      } else if (response.user?.role === 'admin') {
         navigate('/admin-dashboard'); // Assuming an admin dashboard exists
       }
     }

@@ -22,10 +22,10 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('userInfo', JSON.stringify(data));
       setUser(data);
       toast.success('Logged in successfully!');
-      return true;
+      return { success: true, user: data };
     } catch (error) {
       toast.error(error.response?.data?.message || 'Login failed');
-      return false;
+      return { success: false, user: null };
     }
   };
 
