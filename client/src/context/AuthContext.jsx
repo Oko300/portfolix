@@ -21,6 +21,8 @@ export const AuthProvider = ({ children }) => {
       const { data } = await API.post('/auth/login', { email, password });
       localStorage.setItem('userInfo', JSON.stringify(data));
       setUser(data);
+      console.log('Login response data:', data);
+      console.log('User role:', data.role);
       toast.success('Logged in successfully!');
       return { success: true, user: data };
     } catch (error) {

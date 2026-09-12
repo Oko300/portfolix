@@ -15,13 +15,7 @@ const Login = () => {
   const onSubmit = async (data) => {
     const response = await login(data.email, data.password);
     if (response.success) {
-      if (response.user?.role === 'student') {
-        navigate('/dashboard');
-      } else if (response.user?.role === 'teacher') {
-        navigate('/teacher');
-      } else if (response.user?.role === 'admin') {
-        navigate('/admin-dashboard'); // Assuming an admin dashboard exists
-      }
+      navigate('/dashboard');
     }
   };
 
