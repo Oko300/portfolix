@@ -17,6 +17,7 @@ router.get('/public/:slug', getPublicPortfolio);
 router.put('/increment-view/:id', incrementPortfolioView);
 
 // Protected routes
+router.post('/', protect, createPortfolio);
 router.post('/create', protect, authorizeRoles('student'), createPortfolio);
 router.get('/mine', protect, getMyPortfolio);
 router.put('/update', protect, authorizeRoles('student'), updatePortfolio);

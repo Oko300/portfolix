@@ -6,7 +6,29 @@ export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
+  const [portfolio, setPortfolio] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const fetchPortfolio = async () => {
+    setLoading(true);
+    try {
+      if (user && user.role === 'student') {
+        const { data } = await API.get('/portfolio/mine');
+        setPortfolio(data);
+      } else {
+        setPortfolio(null);
+      }
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        setPortfolio(null);
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to fetch portfolio.');
+        setPortfolio(null); // Ensure portfolio is null on other errors too
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const userInfo = localStorage.getItem('userInfo');
@@ -15,6 +37,14 @@ export const AuthProvider = ({ children }) => {
     }
     setLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      fetchPortfolio();
+    } else {
+      setPortfolio(null);
+    }
+  }, [user]);
 
   const login = async (email, password) => {
     try {
@@ -59,6 +89,8 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated,
       role,
       loading,
+      portfolio,
+      fetchPortfolio,
       login,
       register,
       logout,
