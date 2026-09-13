@@ -10,6 +10,7 @@ import { useForm } from 'react-hook-form';
 import FileUploader from '../../components/shared/FileUploader';
 import RichTextEditor from '../../components/shared/RichTextEditor';
 import { PlusCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 // WorkForm component - to be reused for adding/editing works
 export const WorkForm = ({ portfolioId, onWorkAdded, onWorkUpdated, currentWork }) => {
