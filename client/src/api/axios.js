@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: '/api',
+  baseURL: 'https://portfolix-lnja.onrender.com/api',
   withCredentials: true,
 });
 
