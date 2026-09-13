@@ -13,13 +13,20 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// CORS configuration
-const allowedOrigins = process.env.NODE_ENV === 'development'
-  ? [process.env.CLIENT_URL, 'http://localhost:5173']
-  : [process.env.CLIENT_URL];
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://portfolix-1.onrender.com',
+  process.env.CLIENT_URL,
+].filter(Boolean);
 
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
