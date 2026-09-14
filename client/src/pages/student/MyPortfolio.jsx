@@ -20,8 +20,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/Ta
 import { PlusCircle } from 'lucide-react';
 
 const MyPortfolio = () => {
-  const { user, portfolio, loading: authLoading, fetchPortfolio } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
+
+  const [portfolio, setPortfolio] = useState(null);
 
   const [activeTab, setActiveTab] = useState('works');
   const [isWorkModalOpen, setIsWorkModalOpen] = useState(false);
@@ -39,21 +41,20 @@ const MyPortfolio = () => {
   const [goals, setGoals] = useState([]);
   const [badges, setBadges] = useState([]);
   const [contentLoading, setContentLoading] = useState(true);
-  const portfolioId = portfolio?._id; // Get portfolio ID once from the portfolio object
 
 
-  const fetchPortfolioContent = useCallback(async () => {
-    if (!portfolioId) {
+  const fetchPortfolioContent = useCallback(async (currentPortfolioId) => {
+    if (!currentPortfolioId) {
       setContentLoading(false);
       return;
     }
     setContentLoading(true);
     try {
       const [worksRes, reflectionsRes, goalsRes, badgesRes] = await Promise.all([
-        API.get(`/work/list/${portfolioId}`),
-        API.get(`/reflection/list/${portfolioId}`),
-        API.get(`/goal/list/${portfolioId}`),
-        API.get(`/badge/list/${portfolioId}`),
+        API.get(`/work/list/${currentPortfolioId}`),
+        API.get(`/reflection/list/${currentPortfolioId}`),
+        API.get(`/goal/list/${currentPortfolioId}`),
+        API.get(`/badge/list/${currentPortfolioId}`),
       ]);
       setWorks(worksRes.data);
       setReflections(reflectionsRes.data);
@@ -65,22 +66,30 @@ const MyPortfolio = () => {
     } finally {
       setContentLoading(false);
     }
-  }, [portfolioId]);
+  }, []);
 
   
   useEffect(() => {
-    if (!authLoading && user) {
-      if (!portfolioId) { // Check portfolioId directly
-        // Optionally, redirect to a portfolio creation page or show a message
-        // For now, we will assume the Portfolio component handles creation or shows a message
-        toast.info('Please create your portfolio.');
-      } else {
-        fetchPortfolioContent();
+    const getPortfolioAndContent = async () => {
+      if (!user) {
+        navigate('/login');
+        return;
       }
-    } else if (!authLoading && !user) {
-      navigate('/login'); // Redirect to login if not authenticated
-    }
-  }, [user, portfolioId, authLoading, fetchPortfolioContent, navigate]);
+
+      try {
+        const res = await API.get('/portfolio/mine');
+        setPortfolio(res.data);
+        const id = res.data._id;
+        fetchPortfolioContent(id);
+      } catch (error) {
+        console.error('Error fetching portfolio:', error);
+        toast.error(error.response?.data?.message || 'Failed to load portfolio.');
+        setContentLoading(false);
+      }
+    };
+
+    getPortfolioAndContent();
+  }, [fetchPortfolioContent, navigate, user]);
 
   // Handlers for successful form submissions (add/update)
   const handleWorkFormSuccess = () => {
@@ -303,19 +312,19 @@ const MyPortfolio = () => {
 
       {/* Modals for Add/Edit Forms */}
       <Modal isOpen={isWorkModalOpen} onClose={() => setIsWorkModalOpen(false)} title={currentWork ? "Edit Work" : "Add New Work"}>
-        <WorkForm portfolioId={portfolioId} onWorkAdded={handleWorkFormSuccess} onWorkUpdated={handleWorkFormSuccess} currentWork={currentWork} />
+        <WorkForm portfolioId={portfolio?._id} onWorkAdded={handleWorkFormSuccess} onWorkUpdated={handleWorkFormSuccess} currentWork={currentWork} />
       </Modal>
 
       <Modal isOpen={isReflectionModalOpen} onClose={() => setIsReflectionModalOpen(false)} title={currentReflection ? "Edit Reflection" : "Add New Reflection"}>
-        <ReflectionForm portfolioId={portfolioId} onReflectionAdded={handleReflectionFormSuccess} onReflectionUpdated={handleReflectionFormSuccess} currentReflection={currentReflection} />
+        <ReflectionForm portfolioId={portfolio?._id} onReflectionAdded={handleReflectionFormSuccess} onReflectionUpdated={handleReflectionFormSuccess} currentReflection={currentReflection} />
       </Modal>
 
       <Modal isOpen={isGoalModalOpen} onClose={() => setIsGoalModalOpen(false)} title={currentGoal ? "Edit Goal" : "Add New Goal"}>
-        <GoalForm portfolioId={portfolioId} onGoalAdded={handleGoalFormSuccess} onGoalUpdated={handleGoalFormSuccess} currentGoal={currentGoal} />
+        <GoalForm portfolioId={portfolio?._id} onGoalAdded={handleGoalFormSuccess} onGoalUpdated={handleGoalFormSuccess} currentGoal={currentGoal} />
       </Modal>
 
       <Modal isOpen={isBadgeModalOpen} onClose={() => setIsBadgeModalOpen(false)} title={currentBadge ? "Edit Badge" : "Add New Badge"}>
-        <BadgeForm portfolioId={portfolioId} onBadgeAdded={handleBadgeFormSuccess} onBadgeUpdated={handleBadgeFormSuccess} currentBadge={currentBadge} />
+        <BadgeForm portfolioId={portfolio?._id} onBadgeAdded={handleBadgeFormSuccess} onBadgeUpdated={handleBadgeFormSuccess} currentBadge={currentBadge} />
       </Modal>
     </div>
   );
