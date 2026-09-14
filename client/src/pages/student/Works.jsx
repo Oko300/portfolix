@@ -36,7 +36,7 @@ export const WorkForm = ({ portfolioId, onWorkAdded, onWorkUpdated, currentWork 
     const formData = new FormData();
     for (const key in data) {
       if (key === 'tags') {
-        formData.append(key, JSON.stringify(data[key].split(',').map(tag => tag.trim())));
+        formData.append(key, data[key]);
       } else if (key !== 'file') { // Don't append file field directly, handle selectedFile separately
         formData.append(key, data[key]);
       }
