@@ -22,8 +22,8 @@ import { PlusCircle } from 'lucide-react';
 const MyPortfolio = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-
   const [portfolio, setPortfolio] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const [activeTab, setActiveTab] = useState('works');
   const [isWorkModalOpen, setIsWorkModalOpen] = useState(false);
@@ -40,56 +40,32 @@ const MyPortfolio = () => {
   const [reflections, setReflections] = useState([]);
   const [goals, setGoals] = useState([]);
   const [badges, setBadges] = useState([]);
-  const [contentLoading, setContentLoading] = useState(true);
 
-
-  const fetchPortfolioContent = useCallback(async (currentPortfolioId) => {
-    if (!currentPortfolioId) {
-      setContentLoading(false);
-      return;
-    }
-    setContentLoading(true);
-    try {
-      const [worksRes, reflectionsRes, goalsRes, badgesRes] = await Promise.all([
-        API.get(`/work/list/${currentPortfolioId}`),
-        API.get(`/reflection/list/${currentPortfolioId}`),
-        API.get(`/goal/list/${currentPortfolioId}`),
-        API.get(`/badge/list/${currentPortfolioId}`),
-      ]);
-      setWorks(worksRes.data);
-      setReflections(reflectionsRes.data);
-      setGoals(goalsRes.data);
-      setBadges(badgesRes.data);
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to load portfolio content.');
-      console.error('Error fetching portfolio content:', error);
-    } finally {
-      setContentLoading(false);
-    }
-  }, []);
-
-  
   useEffect(() => {
-    const getPortfolioAndContent = async () => {
-      if (!user) {
-        navigate('/login');
-        return;
-      }
-
+    if (!user) { navigate('/login'); return; }
+    const load = async () => {
       try {
         const res = await API.get('/portfolio/mine');
         setPortfolio(res.data);
         const id = res.data._id;
-        fetchPortfolioContent(id);
-      } catch (error) {
-        console.error('Error fetching portfolio:', error);
-        toast.error(error.response?.data?.message || 'Failed to load portfolio.');
-        setContentLoading(false);
+        const [w, r, g, b] = await Promise.all([
+          API.get('/work/list/' + id),
+          API.get('/reflection/list/' + id),
+          API.get('/goal/list/' + id),
+          API.get('/badge/list/' + id),
+        ]);
+        setWorks(w.data);
+        setReflections(r.data);
+        setGoals(g.data);
+        setBadges(b.data);
+      } catch (err) {
+        toast.error('Failed to load portfolio content.');
+      } finally {
+        setLoading(false);
       }
     };
-
-    getPortfolioAndContent();
-  }, [fetchPortfolioContent, navigate, user]);
+    load();
+  }, [user, navigate]);
 
   // Handlers for successful form submissions (add/update)
   const handleWorkFormSuccess = () => {
