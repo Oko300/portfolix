@@ -57,7 +57,7 @@ export const WorkForm = ({ portfolioId, onWorkAdded, onWorkUpdated, currentWork 
         toast.success('Work updated successfully!');
         if (onWorkUpdated) onWorkUpdated();
       } else {
-        await API.post('/work/create', formData);
+        await API.post('/work/upload', formData);
         toast.success('Work added successfully!');
         if (onWorkAdded) onWorkAdded();
       }

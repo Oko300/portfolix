@@ -5,9 +5,7 @@ const Portfolio = require('../models/Portfolio');
 // @route   POST /api/work/upload
 // @access  Private (Student only)
 const uploadWork = async (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: 'No file uploaded' });
-  }
+
 
   const { title, description, category, tags } = req.body;
 
@@ -22,8 +20,8 @@ const uploadWork = async (req, res) => {
     title,
     description,
     category,
-    fileUrl: `/uploads/${req.file.filename}`,
-    fileType: req.file.mimetype,
+    fileUrl: req.file ? `/uploads/${req.file.filename}` : '',
+    fileType: req.file ? req.file.mimetype : '',
     thumbnailUrl: req.body.thumbnailUrl, // Optional, could be generated later
     tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
   });
