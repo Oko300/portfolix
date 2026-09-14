@@ -51,7 +51,8 @@ const getMyPortfolio = async (req, res) => {
   if (portfolio) {
     res.status(200).json(portfolio);
   } else {
-    res.status(404).json({ message: 'Portfolio not found' });
+    const newPortfolio = await Portfolio.create({ userId: req.user.id, title: 'My Portfolio' });
+    return res.status(200).json(newPortfolio);
   }
 };
 
