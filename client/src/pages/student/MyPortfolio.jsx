@@ -44,7 +44,7 @@ const MyPortfolio = () => {
         const id = res.data._id;
         const [w, r, g, b] = await Promise.all([
           API.get('/work/list/' + id),
-          API.get('/reflection/list/' + id),
+          API.get('/reflection/list-by-portfolio/' + id),
           API.get('/goal/list/' + id),
           API.get('/badge/list/' + id),
         ]);
@@ -66,7 +66,7 @@ const MyPortfolio = () => {
     const id = portfolio._id;
     const [w, r, g, b] = await Promise.all([
       API.get('/work/list/' + id),
-      API.get('/reflection/list/' + id),
+      API.get('/reflection/list-by-portfolio/' + id),
       API.get('/goal/list/' + id),
       API.get('/badge/list/' + id),
     ]);
