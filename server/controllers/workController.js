@@ -5,6 +5,10 @@ const Portfolio = require('../models/Portfolio');
 // @route   POST /api/work/upload
 // @access  Private (Student only)
 const uploadWork = async (req, res) => {
+  console.log('uploadWork called');
+  console.log('body:', req.body);
+  console.log('file:', req.file);
+  try {
 
 
   const { title, description, category, tags } = req.body;
@@ -30,6 +34,10 @@ const uploadWork = async (req, res) => {
     res.status(201).json(work);
   } else {
     res.status(400).json({ message: 'Invalid work data' });
+  }
+  } catch (err) {
+    console.error('uploadWork error:', err);
+    res.status(500).json({ message: err.message });
   }
 };
 
