@@ -104,12 +104,17 @@ export const WorkForm = ({ portfolioId, onWorkAdded, onWorkUpdated, currentWork 
 
       <div>
         <label htmlFor="category" className="block text-sm font-medium text-gray-700">Category</label>
-        <input
-          type="text"
+        <select
           id="category"
           {...register('category', { required: 'Category is required' })}
           className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3"
-        />
+        >
+          <option value="">Select a category</option>
+          <option value="academic">Academic</option>
+          <option value="skill">Skill</option>
+          <option value="extracurricular">Extracurricular</option>
+          <option value="project">Project</option>
+        </select>
         {errors.category && <p className="text-danger text-sm mt-1">{errors.category.message}</p>}
       </div>
 
