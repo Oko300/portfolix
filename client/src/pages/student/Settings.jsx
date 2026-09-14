@@ -11,6 +11,8 @@ import { Link } from 'react-router-dom';
 const Settings = () => {
   const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
+  const avatarUrl = user?.avatar || user?.avatarUrl || '';
+
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar || '');
   const [isPublic, setIsPublic] = useState(false);
@@ -165,7 +167,7 @@ const Settings = () => {
         <form onSubmit={handleSubmitProfile(onUpdateProfile)} className="space-y-4">
           <div className="flex flex-col items-center mb-6">
             <img
-              src={avatarUrl || 'https://via.placeholder.com/150'}
+              src={avatarPreview || avatarUrl || 'https://via.placeholder.com/150'}
               alt="Avatar"
               className="w-24 h-24 rounded-full object-cover mb-3 border border-gray-300"
             />
