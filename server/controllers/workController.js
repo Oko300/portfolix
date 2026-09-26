@@ -24,7 +24,7 @@ const uploadWork = async (req, res) => {
     title,
     description,
     category,
-    fileUrl: req.file ? `/uploads/${req.file.filename}` : '',
+    fileUrl: req.file ? req.file.path : '',
     fileType: req.file ? req.file.mimetype : '',
     thumbnailUrl: req.body.thumbnailUrl, // Optional, could be generated later
     tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
