@@ -1,4 +1,4 @@
-const Work = require('../models/Work');
+﻿const Work = require('../models/Work');
 const Portfolio = require('../models/Portfolio');
 
 // @desc    Upload new work sample
@@ -26,7 +26,7 @@ const uploadWork = async (req, res) => {
       portfolioId: portfolio._id,
       title,
       description,
-      category,
+      category: category ? category.toLowerCase() : category,
       fileUrl,
       fileType,
       tags: tags ? tags.split(',').map(tag => tag.trim()) : [],
@@ -107,3 +107,4 @@ const deleteWork = async (req, res) => {
 };
 
 module.exports = { uploadWork, getWorks, updateWork, deleteWork };
+
