@@ -1,27 +1,23 @@
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const multer = require('multer');
-const path = require('path');
 
-// Use memory storage - no disk needed (works on Render)
-const storage = multer.memoryStorage();
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
-// Check File Type
-function checkFileType(file, cb) {
-  const filetypes = /jpeg|jpg|png|gif|pdf|doc|docx|mp4|mov|avi|zip|rar|js|html|css|py|java|c|cpp|json/;
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  const mimetype = filetypes.test(file.mimetype);
-  if (mimetype && extname) {
-    return cb(null, true);
-  } else {
-    cb('Error: Unsupported file type!');
-  }
-}
-
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 10000000 }, // 10MB limit
-  fileFilter: function (req, file, cb) {
-    checkFileType(file, cb);
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'portfolix',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'mp4', 'mov'],
+    resource_type: 'auto',
   },
 });
 
+const upload = multer({ storage: storage });
+
 module.exports = upload;
+module.exports.cloudinary = cloudinary;
