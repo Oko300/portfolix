@@ -20,15 +20,14 @@ const uploadWork = async (req, res) => {
     let thumbnailUrl = '';
 
     if (req.file) {
-      // Stream the in-memory buffer to Cloudinary
-      const result = await uploadToCloudinary(req.file.buffer, {
+      // Compress images if needed, then upload to Cloudinary
+      const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype, {
         public_id: `work_${Date.now()}`,
       });
 
       fileUrl = result.secure_url;
-      fileType = req.file.mimetype || '';
+      fileType = result.finalMime || req.file.mimetype || '';
 
-      // For images Cloudinary already gives a usable URL; for others we keep the same URL
       if (fileType.startsWith('image/')) {
         thumbnailUrl = result.secure_url;
       }
@@ -50,7 +49,13 @@ const uploadWork = async (req, res) => {
     res.status(201).json(work);
   } catch (err) {
     console.error('uploadWork error:', err);
-    res.status(500).json({ message: err.message || 'Failed to upload work' });
+
+    // Surface known client errors as 400 instead of 500
+    const status = err.http_code === 400 || err.code === 'FILE_TOO_LARGE' ? 400 : 500;
+    res.status(status).json({
+      message: err.message || 'Failed to upload work',
+      code: err.code || undefined,
+    });
   }
 };
 
@@ -92,13 +97,12 @@ const updateWork = async (req, res) => {
         : tags;
     }
 
-    // Optional: allow replacing the file on update
     if (req.file) {
-      const result = await uploadToCloudinary(req.file.buffer, {
+      const result = await uploadToCloudinary(req.file.buffer, req.file.mimetype, {
         public_id: `work_${Date.now()}`,
       });
       work.fileUrl = result.secure_url;
-      work.fileType = req.file.mimetype || '';
+      work.fileType = result.finalMime || req.file.mimetype || '';
       work.thumbnailUrl = work.fileType.startsWith('image/') ? result.secure_url : '';
     }
 
@@ -106,7 +110,8 @@ const updateWork = async (req, res) => {
     res.status(200).json(updatedWork);
   } catch (err) {
     console.error('updateWork error:', err);
-    res.status(500).json({ message: err.message });
+    const status = err.http_code === 400 || err.code === 'FILE_TOO_LARGE' ? 400 : 500;
+    res.status(status).json({ message: err.message });
   }
 };
 
