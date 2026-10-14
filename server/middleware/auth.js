@@ -18,24 +18,54 @@ const protect = async (req, res, next) => {
       // Attach user from the token
       req.user = await User.findById(decoded.id).select('-password');
 
-      next();
+      if (!req.user) {
+        return res.status(401).json({
+          message: 'Not authorized, user no longer exists',
+          code: 'USER_NOT_FOUND',
+        });
+      }
+
+      return next();
     } catch (error) {
       console.error(error);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+
+      // Distinguish expired tokens from other JWT failures
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          message: 'Session expired. Please log in again.',
+          code: 'TOKEN_EXPIRED',
+          expiredAt: error.expiredAt,
+        });
+      }
+
+      if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({
+          message: 'Not authorized, invalid token',
+          code: 'TOKEN_INVALID',
+        });
+      }
+
+      return res.status(401).json({
+        message: 'Not authorized, token failed',
+        code: 'TOKEN_FAILED',
+      });
     }
   }
 
   if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token' });
+    return res.status(401).json({
+      message: 'Not authorized, no token',
+      code: 'NO_TOKEN',
+    });
   }
 };
 
 const authorizeRoles = (...roles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res
-        .status(403)
-        .json({ message: `User role ${req.user.role} is not authorized to access this route` });
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        message: `User role ${req.user?.role || 'unknown'} is not authorized to access this route`,
+      });
     }
     next();
   };

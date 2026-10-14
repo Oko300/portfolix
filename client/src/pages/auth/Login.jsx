@@ -1,21 +1,38 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../../hooks/useAuth';
 import Button from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import { Eye, EyeOff } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { register, handleSubmit, formState: { errors } } = useForm();
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Show a friendly message when redirected because the JWT expired
+  useEffect(() => {
+    if (searchParams.get('session') === 'expired') {
+      toast.info('Your session has expired. Please log in again.');
+    }
+  }, [searchParams]);
 
   const onSubmit = async (data) => {
     const response = await login(data.email, data.password);
     if (response.success) {
-      navigate('/dashboard');
+      // Redirect based on role
+      const role = response.user?.role;
+      if (role === 'teacher') {
+        navigate('/teacher');
+      } else if (role === 'admin') {
+        navigate('/admin-dashboard');
+      } else {
+        navigate('/dashboard');
+      }
     }
   };
 
@@ -23,13 +40,26 @@ const Login = () => {
     <div className="flex items-center justify-center min-h-[calc(100vh-80px)] bg-background p-4">
       <Card className="w-full max-w-md">
         <h2 className="text-3xl font-bold text-center text-primary mb-6">Login to Portfolix</h2>
+
+        {searchParams.get('session') === 'expired' && (
+          <div className="mb-4 p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-md text-sm text-center">
+            Your session has expired. Please log in again to continue.
+          </div>
+        )}
+
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
           <div>
             <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
             <input
               type="email"
               id="email"
-              {...register('email', { required: 'Email is required', pattern: { value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i, message: 'Invalid email address' } })}
+              {...register('email', {
+                required: 'Email is required',
+                pattern: {
+                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                  message: 'Invalid email address',
+                },
+              })}
               className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-3 focus:ring-primary focus:border-primary"
             />
             {errors.email && <p className="text-danger text-sm mt-1">{errors.email.message}</p>}
@@ -59,7 +89,8 @@ const Login = () => {
         </form>
 
         <p className="mt-6 text-center text-gray-600">
-          Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
+          Don't have an account?{' '}
+          <Link to="/register" className="text-primary hover:underline">Register</Link>
         </p>
       </Card>
     </div>

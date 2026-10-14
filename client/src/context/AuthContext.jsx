@@ -10,7 +10,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const fetchPortfolio = async () => {
-    setLoading(true);
     try {
       if (user && user.role === 'student') {
         const { data } = await API.get('/portfolio/mine');
@@ -19,23 +18,51 @@ export const AuthProvider = ({ children }) => {
         setPortfolio(null);
       }
     } catch (error) {
-      if (error.response && error.response.status === 404) {
+      // 401 is already handled by the axios interceptor (clears session + redirects)
+      if (error.response?.status === 404) {
         setPortfolio(null);
-      } else {
+      } else if (error.response?.status !== 401) {
         toast.error(error.response?.data?.message || 'Failed to fetch portfolio.');
-        setPortfolio(null); // Ensure portfolio is null on other errors too
+        setPortfolio(null);
       }
-    } finally {
-      setLoading(false);
     }
   };
 
+  // On app load: restore user from localStorage, then validate the token
   useEffect(() => {
-    const userInfo = localStorage.getItem('userInfo');
-    if (userInfo) {
-      setUser(JSON.parse(userInfo));
-    }
-    setLoading(false);
+    const initAuth = async () => {
+      const userInfo = localStorage.getItem('userInfo');
+      if (!userInfo) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(userInfo);
+        if (!parsed?.token) {
+          localStorage.removeItem('userInfo');
+          setLoading(false);
+          return;
+        }
+
+        // Optimistic set so UI doesn't flash login page
+        setUser(parsed);
+
+        // Validate token against the backend
+        // If token is expired/invalid the axios interceptor will clear storage and redirect
+        await API.get('/auth/me');
+      } catch (err) {
+        // Interceptor already handled 401; for any other error just clear
+        if (err.response?.status !== 401) {
+          localStorage.removeItem('userInfo');
+          setUser(null);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
   useEffect(() => {
@@ -51,8 +78,6 @@ export const AuthProvider = ({ children }) => {
       const { data } = await API.post('/auth/login', { email, password });
       localStorage.setItem('userInfo', JSON.stringify(data));
       setUser(data);
-      console.log('Login response data:', data);
-      console.log('User role:', data.role);
       toast.success('Logged in successfully!');
       return { success: true, user: data };
     } catch (error) {
@@ -77,6 +102,7 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem('userInfo');
     setUser(null);
+    setPortfolio(null);
     toast.info('Logged out');
   };
 
@@ -84,18 +110,20 @@ export const AuthProvider = ({ children }) => {
   const role = user?.role;
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      isAuthenticated,
-      role,
-      loading,
-      portfolio,
-      fetchPortfolio,
-      login,
-      register,
-      logout,
-      setUser // For updating user profile info directly after settings update
-    }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        role,
+        loading,
+        portfolio,
+        fetchPortfolio,
+        login,
+        register,
+        logout,
+        setUser, // For updating user profile info directly after settings update
+      }}
+    >
       {!loading && children}
     </AuthContext.Provider>
   );
