@@ -9,6 +9,12 @@ API.interceptors.request.use((req) => {
   if (localStorage.getItem('userInfo')) {
     req.headers.Authorization = `Bearer ${JSON.parse(localStorage.getItem('userInfo')).token}`;
   }
+
+  // Let the browser set the correct multipart/form-data boundary for FormData
+  if (req.data instanceof FormData) {
+    delete req.headers['Content-Type'];
+  }
+
   return req;
 });
 
